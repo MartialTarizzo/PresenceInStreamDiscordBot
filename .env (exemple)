@@ -1,4 +1,5 @@
 # .env
 DISCORD_TOKEN=<token_du_bot>
 DISCORD_GUILD=<nom_du_serveur>
+TIME_INTERVAL=5
 BOTADMIN=<identifiant de l'admin avec son discriminant de la forme #0000)>

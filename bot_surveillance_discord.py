@@ -1,6 +1,84 @@
-# ## TestSuiviPresenceInStreamBot
-# Essai de bot discord pour suivre la présence des participants
+### bot_surveillance_discord.py
+# Premier essai de bot discord pour suivre la présence des participants
+# Fonctionne en ligne de commande
+# 
+# Résumé du développement :
+# 	
+# 1- téléchargement des sources de la dernière version de python
+# (discord ne marche que si >3.6)
+# 
+# 2- compilation de python, installation dans ~/python382
+# 
+# 3- création d'un environnement virtuel pour bosser l'esprit tranquille
+# 
+# 4- chargement des librairies indispensables. Voilà l'état actuel. De
+# mémoire, je n'ai installé avec PIP que celles marquées d'une (*), les
+# autres sont des dépendances
+# aiohttp==3.6.2
+# async-timeout==3.0.1
+# attrs==19.3.0
+# chardet==3.0.4
+# cycler==0.10.0
+# discord.py==1.3.3                 (*)
+# idna==2.9
+# kiwisolver==1.2.0
+# matplotlib==3.2.1                 (*)
+# multidict==4.7.5
+# numpy==1.18.4
+# pyparsing==2.4.7
+# python-dateutil==2.8.1         (*)
+# python-dotenv==0.13.0
+# six==1.14.0
+# websockets==8.1
+# yarl==1.4.2
+# 
+# 5- dans le répertoire où est installé le fichier python du bot,
+# écriture d'un fichier de configuration .env. Ce fichier contient des
+# infos qui n'ont rien à faire dans le code (token du bot entre autre !)
+# 
+# 6- dans le site web discord developer, créer une application, un bot,
+# et l'enregistrer dans le serveur discord
+# 
+# 7- lancement dans un terminal du bot par
+# ~$ python3 bot_surveillance_discord.py
+# Le bot doit se connecter sur le serveur et écrire dans le terminal
+# un truc du genre :
+# ===========================
+# SuiviPresenceInStream#1969 est connecté au serveur : xxxx(id: .....)
+# Participants inscrits dans le serveur :
+# - ***
+# - ***
+# - SuiviPresenceInStream
+# * Surveillance en attente (ouvrir un salon vocal avant !start ) *
+# ===========================
+# 
+# Tout est prêt, il n'y a plus qu'à lancer les commandes du bot, une
+# fois un salon vocal ouvert sur le serveur.
+# 
+# ***** Les commandes du bot ********
+# !start
+# lance la surveillance du serveur. Si un serveur vocal n'est pas
+# ouvert, te prévient !
+# 
+# !bye
+# sauve les données dans le répertoire du bot, et le ferme proprement.
+# Plus précisément, sauve deux graphiques (temps de présence par
+# utilisateur et nombre d'utilisateurs en fonction du temps) et un
+# fichier texte csv contenant les infos permettant de reconstruire les
+# graphiques. cf PJ
+# 
+# En plus pour le plaisir :
+# !graph_users
+# provoque l'inclusion dans le chat discord du graphique "temps par utilisateur"
+# 
+# !graph_headcount
+# provoque l'inclusion dans le chat du graphique effectif=f(t)
+# 
+# !save_all
+# sauve la même chose que !bye, mais sans arrêter le bot
+# j'ai laissé en commentaire les anciennes commandes (!cb !up !edt), mais elles sont destinées à disparaître
 
+# importations
 import discord
 from discord.ext import commands, tasks
 import os
@@ -9,21 +87,22 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 from dotenv import load_dotenv
 
-
-## Environnement
+## Récupération des données d'environnement
 load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-GUILD = os.getenv('DISCORD_GUILD')
-BOTADMIN=os.getenv('BOTADMIN')
+
+TOKEN = os.getenv('DISCORD_TOKEN') 	# le token du bot
+GUILD = os.getenv('DISCORD_GUILD')	# le nom du serveur
+BOTADMIN=os.getenv('BOTADMIN')		# l'administrateur du bot. Seul autorisé pour les commandes
+
 Liste_autorisee = [BOTADMIN]
 
 # chemin vers le script du bot ; utilisé pour la sauvegarde des fichiers (images, ...)
 BOTPATH=os.path.dirname(os.path.realpath(__file__))
 
+# l'intervalle de temps entre deux mesures
+time_interval = int(os.getenv('TIME_INTERVAL'))
 
 ## variables globales
-# l'intervalle de temps entre deux mesures
-time_interval = 2
 
 # pour contenir le nombre d'utilisateurs dans le salon vocal en fonction du temps (en unité 'time_interval')
 liste_effectifs = []
@@ -31,7 +110,7 @@ liste_effectifs = []
 # dictionnaire des durées cumulées pour chaque utilisateur
 dict_uptime = {}
 
-## command prefix
+## les commandes du bot sont préfixées par '!'
 client = commands.Bot(command_prefix = '!')
 
 ## gestion des droits
@@ -42,6 +121,8 @@ def is_admin(ctx):
 	
 ## coroutines ----------------------------------
 
+# déclenché au démarrage du bot. 
+# écriture d'infos de démarrage dans le terminal
 @client.event
 async def on_ready():
 	await client.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="le serveur vocal"))
@@ -60,24 +141,26 @@ async def on_ready():
 	print("* Surveillance en attente (ouvrir un salon vocal avant !start ) *")
 
 
-#Cette commande, permet de compte le nombre de présents dans le salon vocal de la personne éxécutant la commande
-@client.command()
-async def cb(ctx, *args):
-	if not is_admin(ctx): return
-
-	if ctx.message.author.voice == None:
-		await ctx.send("*Pas de salon vocal ouvert ...*")
-	else:
-		personnes = ctx.message.author.voice.channel.members
-		x = len(personnes)
-		if x == 1:
-			await ctx.send("Une seule personne est connectée sur ce salon vocal")
-		else:
-			a = str(x)
-			mess = "Nous sommes actuellement"+ " "+  a + " " +"personnes connectées sur ce salon vocal"
-			await ctx.send(mess)
+# !!!! ancienne commande, destinée à disparaître
+# #Cette commande, permet de compte le nombre de présents dans le salon vocal de la personne éxécutant la commande
+# @client.command()
+# async def cb(ctx, *args):
+# 	if not is_admin(ctx): return
+# 
+# 	if ctx.message.author.voice == None:
+# 		await ctx.send("*Pas de salon vocal ouvert ...*")
+# 	else:
+# 		personnes = ctx.message.author.voice.channel.members
+# 		x = len(personnes)
+# 		if x == 1:
+# 			await ctx.send("Une seule personne est connectée sur ce salon vocal")
+# 		else:
+# 			a = str(x)
+# 			mess = "Nous sommes actuellement"+ " "+  a + " " +"personnes connectées sur ce salon vocal"
+# 			await ctx.send(mess)
 	
-#Cette commande, permet de démarrer le suivi de présence dans le salon vocal de la personne éxécutant la commande
+# Cette commande, permet de démarrer le suivi de présence dans le salon vocal de la personne éxécutant la commande
+# la surveillance ne sera déclenchée que s'il existe un serveur vocal actif
 @client.command()
 async def start(ctx):
 
@@ -90,7 +173,8 @@ async def start(ctx):
 	await ctx.send("**Surveillance en cours ...**")
 	conec.start(ctx)
 
-#Boucle temporelle qui effectue le suivi
+# Boucle temporelle qui effectue le suivi
+# TODO : il faudrait voir s'il est possible de faire autre chose que du polling
 @tasks.loop(seconds = time_interval, count = 50000 / time_interval)
 async def conec(ctx):
 	if ctx.message.author.voice == None:
@@ -112,7 +196,8 @@ async def conec(ctx):
 			else:
 				dict_uptime[c] += time_interval
 
-#Commande permettant d'afficher une liste de suivi avec pour format [identifiant, temps de présence]    
+# Commande permettant d'imprimer dans le terminal une liste des utilisateurs présents
+# avec leur durée de présence    
 @client.command()
 async def up(ctx):
 	if not is_admin(ctx): return
@@ -121,11 +206,13 @@ async def up(ctx):
 	for u,t in dict_uptime.items():
 		print(f'{u} présent pendant {t*time_interval} s')
 
-#Commande permettant de renvoyer l'emploi du temps de la semaine (emploi du temps sous forme d'image enregistrée dans le dossier du bot)
-@client.command()
-async def edt(ctx):
-	await ctx.send("Date de la dernière mise à jour : 05/05")
-	await ctx.send(file=discord.File('edt/edt.png'))
+
+# !!! commande destinée à disparaître
+# #Commande permettant de renvoyer l'emploi du temps de la semaine (emploi du temps sous forme d'image enregistrée dans le dossier du bot)
+# @client.command()
+# async def edt(ctx):
+# 	await ctx.send("Date de la dernière mise à jour : 05/05")
+# 	await ctx.send(file=discord.File('edt/edt.png'))
 	
 ## graphiques
 # 1 - durée par utilisateur
@@ -216,17 +303,19 @@ def save_data():
 		for u,t in dict_uptime.items():
 			f.write(f'{u}\t{t}\n')
 
+# sauvegarde des graphiques et des données dans le répertoire du bot
 def save_graphs_and_data():	
 	save_graph_users()
 	save_graph_headcount()
 	save_data()
 
-# une commande discord pour tout sauver. Utile ?
+# une commande discord pour tout sauver. permet d'avoir des instantanés. Utile ?
 @client.command()
 async def save_all(ctx):
 	save_graphs_and_data()
 
-## Fermeture du bot
+## Arrêt du bot
+# fermeture propre du bot, avec sauvegarde automatique des graphiques et des données
 @client.command()
 async def bye(ctx):
 	if not is_admin(ctx): return
