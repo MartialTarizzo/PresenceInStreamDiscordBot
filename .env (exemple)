@@ -1,0 +1,4 @@
+# .env
+DISCORD_TOKEN=<token_du_bot>
+DISCORD_GUILD=<nom_du_serveur>
+BOTADMIN=<identifiant de l'admin avec son discriminant de la forme #0000)>
