@@ -1,0 +1,7 @@
+# ne jamais inclure ce fichier : contient le token du bot !
+.env
+
+# l'environnement virtuel
+venv/
+*.png
+*.csv
