@@ -28,8 +28,8 @@
 # multidict==4.7.5
 # numpy==1.18.4
 # pyparsing==2.4.7
-# python-dateutil==2.8.1         (*)
-# python-dotenv==0.13.0
+# python-dateutil==2.8.1
+# python-dotenv==0.13.0         	(*)
 # six==1.14.0
 # websockets==8.1
 # yarl==1.4.2
