@@ -1,4 +1,4 @@
-# .env
+# Exemple de fichier .env
 DISCORD_TOKEN=<token_du_bot>
 DISCORD_GUILD=<nom_du_serveur>
 TIME_INTERVAL=5
