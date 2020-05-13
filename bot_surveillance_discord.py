@@ -1,4 +1,6 @@
 ### bot_surveillance_discord.py
+
+#==========================================================================
 # Premier essai de bot discord pour suivre la présence des participants
 # Fonctionne en ligne de commande
 # 
@@ -76,7 +78,7 @@
 # 
 # !save_all
 # sauve la même chose que !bye, mais sans arrêter le bot
-# j'ai laissé en commentaire les anciennes commandes (!cb !up !edt), mais elles sont destinées à disparaître
+#=============================================================================
 
 # importations
 import discord
@@ -141,23 +143,6 @@ async def on_ready():
 	print("* Surveillance en attente (ouvrir un salon vocal avant !start ) *")
 
 
-# !!!! ancienne commande, destinée à disparaître
-# #Cette commande, permet de compte le nombre de présents dans le salon vocal de la personne éxécutant la commande
-# @client.command()
-# async def cb(ctx, *args):
-# 	if not is_admin(ctx): return
-# 
-# 	if ctx.message.author.voice == None:
-# 		await ctx.send("*Pas de salon vocal ouvert ...*")
-# 	else:
-# 		personnes = ctx.message.author.voice.channel.members
-# 		x = len(personnes)
-# 		if x == 1:
-# 			await ctx.send("Une seule personne est connectée sur ce salon vocal")
-# 		else:
-# 			a = str(x)
-# 			mess = "Nous sommes actuellement"+ " "+  a + " " +"personnes connectées sur ce salon vocal"
-# 			await ctx.send(mess)
 	
 # Cette commande, permet de démarrer le suivi de présence dans le salon vocal de la personne éxécutant la commande
 # la surveillance ne sera déclenchée que s'il existe un serveur vocal actif
@@ -206,13 +191,6 @@ async def up(ctx):
 	for u,t in dict_uptime.items():
 		print(f'{u} présent pendant {t*time_interval} s')
 
-
-# !!! commande destinée à disparaître
-# #Commande permettant de renvoyer l'emploi du temps de la semaine (emploi du temps sous forme d'image enregistrée dans le dossier du bot)
-# @client.command()
-# async def edt(ctx):
-# 	await ctx.send("Date de la dernière mise à jour : 05/05")
-# 	await ctx.send(file=discord.File('edt/edt.png'))
 	
 ## graphiques
 # 1 - durée par utilisateur
