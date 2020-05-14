@@ -89,6 +89,16 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FuncFormatter
 from dotenv import load_dotenv
 
+import logging
+
+## pour le log du fonctionnement du bot
+logger = logging.getLogger('discord')
+logger.setLevel(logging.DEBUG)
+handler = logging.FileHandler(filename='BotDiscord_Surveillance.log', encoding='utf-8', mode='w')
+handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+logger.addHandler(handler)
+
+
 ## Récupération des données d'environnement
 load_dotenv()
 

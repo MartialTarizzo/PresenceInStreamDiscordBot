@@ -3,5 +3,8 @@
 
 # l'environnement virtuel
 venv/
+
+# les sorties du programme (fichiers image, csv, log...)
 *.png
 *.csv
+*.log
