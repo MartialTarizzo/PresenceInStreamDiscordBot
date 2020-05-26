@@ -93,7 +93,7 @@ import logging
 
 ## pour le log du fonctionnement du bot
 logger = logging.getLogger('discord')
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 handler = logging.FileHandler(filename='BotDiscord_Surveillance.log', encoding='utf-8', mode='w')
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
@@ -173,7 +173,10 @@ async def start(ctx):
 @tasks.loop(seconds = time_interval, count = 50000 / time_interval)
 async def conec(ctx):
 	if ctx.message.author.voice == None:
-		print("pas de suivi : Admin hors du salon vocal après démarrage de la surveillance...")
+		msg = "pas de suivi : Admin hors du salon vocal après démarrage de la surveillance..."
+		print(msg)
+		logger.warning(msg)
+
 		return
 
 	# print(datetime.datetime.now().strftime('%Hh %Mm %Ss %f'))
@@ -304,12 +307,20 @@ async def save_all(ctx):
 
 ## Arrêt du bot
 # fermeture propre du bot, avec sauvegarde automatique des graphiques et des données
+# si la commande "!bye" est suivie de "clear" (ie "!bye clear"), le salon textuel est purgé des 100 derniers
+# messages liés au bot (messages écrits par le bot et messages de lancement/arrêt du bot)
 @client.command()
-async def bye(ctx):
+async def bye(ctx, clearBotMsgs=""):
 	if not is_admin(ctx): return
 	
 	save_graphs_and_data()
 	await ctx.send("**Extinction du bot !**")
+	if clearBotMsgs == 'clear':
+		def is_me(m):
+			return m.author == client.user or m.content == '!start' or m.content[:4] == '!bye'
+
+		await ctx.channel.purge(limit=100, check=is_me)
+
 	await client.close()
 
 
